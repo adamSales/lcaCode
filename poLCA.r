@@ -265,3 +265,30 @@ poLCA <-
     return(ret)
 }
 
+### automatically orders the classes by prevalence
+poLCAord <-
+    function (formula, data, nclass = 2, maxiter = 1000, graphs = FALSE,
+    tol = 0.0000000001, na.rm = TRUE, probs.start = NULL, nrep = 1,
+    verbose = TRUE, calc.se = TRUE,ordVar=NULL){
+
+        mm <- match.call()
+        mm <- as.list(mm)
+        mm[[1]] <- NULL
+        mm$ordVar <- NULL
+        mod <- do.call("poLCA",mm)
+
+        pp <- if(!is.null(ordVar)) mod$probs[[ordVar]][,1] else mod$P
+        if(length(pp)>length(unique(pp))){
+            warning(paste0("Ties in ", ordVar," ordering by prevalence"))
+            pp <- mod$P
+        }
+        ord <- order(pp,decreasing=TRUE)
+
+        probs.start.new <- poLCA::poLCA.reorder(mod$probs.start,ord)
+
+        mm$probs.start <- probs.start.new
+        mm$nrep <- 1
+
+        do.call("poLCA",mm)
+    }
+
