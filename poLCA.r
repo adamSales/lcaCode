@@ -7,7 +7,7 @@ tryNA <- function(x){
 poLCA <-
     function (formula, data, nclass = 2, maxiter = 1000, graphs = FALSE,
     tol = 0.0000000001, na.rm = TRUE, probs.start = NULL, nrep = 1,
-    verbose = TRUE, calc.se = TRUE)
+    verbose = TRUE, calc.se = TRUE,impVal=0)
 {
     starttime <- Sys.time()
     mframe <- model.frame(formula, data, na.action = NULL)
@@ -139,6 +139,11 @@ poLCA <-
                       prior <- matrix(colMeans(rgivy), nrow = N,
                         ncol = R, byrow = TRUE)
                     }
+                    nanProbs <- which(is.nan(vp$vecprobs))
+                    if(length(nanProbs)){
+                        vp$vecprobs[nanProbs] <- impVal
+                        if(verbose) message(paste('Replacing NaN probs with',impVal))
+                    }
                     llik[iter] <- tryNA(sum(log(rowSums(prior * poLCA:::poLCA.ylik.C(vp,
                       y)))))
                     dll <- llik[iter] - llik[iter - 1]
@@ -150,6 +155,7 @@ poLCA <-
                     }
                   }
                   if (!error) {
+                    if(length(nanProbs)) vp$vecprobs[nanProbs] <- NaN
                     if (calc.se) {
                       se <- poLCA:::poLCA.se(y, x, poLCA:::poLCA.unvectorize(vp),
                         prior, rgivy)
@@ -165,6 +171,7 @@ poLCA <-
                   firstrun <- FALSE
                 }
                 ret$attempts <- c(ret$attempts, llik[iter])
+                #ret$fullllik <- llik
                 if (llik[iter] > ret$llik) {
                   ret$llik <- llik[iter]
                   ret$probs.start <- probs.init
