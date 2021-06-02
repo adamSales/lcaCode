@@ -155,7 +155,6 @@ poLCA <-
                     }
                   }
                   if (!error) {
-                    if(length(nanProbs)) vp$vecprobs[nanProbs] <- NaN
                     if (calc.se) {
                       se <- poLCA:::poLCA.se(y, x, poLCA:::poLCA.unvectorize(vp),
                         prior, rgivy)
@@ -175,6 +174,7 @@ poLCA <-
                 if (llik[iter] > ret$llik) {
                   ret$llik <- llik[iter]
                   ret$probs.start <- probs.init
+                  if(length(nanProbs)) vp$vecprobs[nanProbs] <- NaN
                   ret$probs <- poLCA:::poLCA.unvectorize(vp)
                   ret$probs.se <- se$probs
                   ret$P.se <- se$P
