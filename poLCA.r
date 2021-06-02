@@ -9,6 +9,7 @@ poLCA <-
     tol = 0.0000000001, na.rm = TRUE, probs.start = NULL, nrep = 1,
     verbose = TRUE, calc.se = TRUE,impVal=0)
 {
+    nanProbs <- integer(0)
     starttime <- Sys.time()
     mframe <- model.frame(formula, data, na.action = NULL)
     mf <- model.response(mframe)
@@ -174,7 +175,6 @@ poLCA <-
                 if (llik[iter] > ret$llik) {
                   ret$llik <- llik[iter]
                   ret$probs.start <- probs.init
-                  if(length(nanProbs)) vp$vecprobs[nanProbs] <- NaN
                   ret$probs <- poLCA:::poLCA.unvectorize(vp)
                   ret$probs.se <- se$probs
                   ret$P.se <- se$P
@@ -245,6 +245,13 @@ poLCA <-
         y[y == 0] <- NA
         ret$y <- data.frame(y)
         ret$x <- data.frame(x)
+
+        if(length(nanProbs)){
+            vp$vecprobs[nanProbs] <- NaN
+            ret$probs <- poLCA:::poLCA.unvectorize(vp)
+            names(ret$probs) <- colnames(y)
+        }
+
         for (j in 1:J) {
             rownames(ret$probs[[j]]) <- paste("class ", 1:R,
                 ": ", sep = "")
@@ -267,6 +274,7 @@ poLCA <-
         if (verbose)
             poLCA:::print.poLCA(ret)
         ret$time <- Sys.time() - starttime
+
     }
     ret$call <- match.call()
     return(ret)
